@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>會員註冊 - TechPlatform</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0b;
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 科技背景效果 */
+    .tech-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0b 100%);
+    }
+
+    .tech-background::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.03) 75%, rgba(0, 255, 255, 0.03) 76%, transparent 77%, transparent),
+        linear-gradient(transparent 24%, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.03) 75%, rgba(0, 255, 255, 0.03) 76%, transparent 77%, transparent);
+      background-size: 50px 50px;
+      animation: grid-move 20s linear infinite;
+    }
+
+    @keyframes grid-move {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* 粒子效果 */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #00ffff;
+      border-radius: 50%;
+      animation: float 6s infinite linear;
+    }
+
+    @keyframes float {
+      0% { 
+        transform: translateY(100vh) translateX(0px);
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { 
+        transform: translateY(-10px) translateX(100px);
+        opacity: 0;
+      }
+    }
+
+    .main-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(20, 20, 30, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 40px 35px;
+      box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.5),
+        0 0 100px rgba(0, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      animation: slideUp 0.8s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #00ffff, transparent);
+      animation: glow-line 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow-line {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .header::before {
+      content: '◇';
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #00ffff;
+      font-size: 20px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+      50% { opacity: 0.7; transform: translateX(-50%) scale(1.1); }
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00ffff, #ffffff, #00ffff);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      animation: gradient-shift 3s ease infinite;
+    }
+
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .header p {
+      color: #8892b0;
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #00ffff;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 16px 20px;
+      background: rgba(10, 10, 15, 0.8);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 8px;
+      font-size: 16px;
+      color: #ffffff;
+      transition: all 0.3s ease;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-group input::placeholder {
+      color: #64748b;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #00ffff;
+      box-shadow: 
+        0 0 20px rgba(0, 255, 255, 0.2),
+        inset 0 1px 3px rgba(0, 0, 0, 0.3);
+      transform: translateY(-1px);
+      background: rgba(10, 10, 15, 0.95);
+    }
+
+    .form-group input:hover,
+    .form-group select:hover {
+      border-color: rgba(0, 255, 255, 0.5);
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 16px;
+      padding: 8px;
+      transition: all 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .toggle-password:hover {
+      color: #00ffff;
+      background: rgba(0, 255, 255, 0.1);
+    }
+
+    .password-strength {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .password-strength-bar {
+      height: 4px;
+      background: rgba(100, 116, 139, 0.3);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .password-strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      width: 0%;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+    }
+
+    .password-strength-text {
+      font-size: 12px;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .emergency-section {
+      margin-top: 35px;
+      padding-top: 25px;
+      position: relative;
+    }
+
+    .emergency-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.5), transparent);
+    }
+
+    .emergency-section .section-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 25px;
+      color: #ef4444;
+      font-weight: 600;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .emergency-section .section-title::before {
+      content: "⚠";
+      margin-right: 10px;
+      font-size: 18px;
+      animation: alert-blink 2s infinite;
+    }
+
+    @keyframes alert-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 40px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: inherit;
+    }
+
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00ffff, #0080ff);
+      color: #0a0a0b;
+      box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(0, 255, 255, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(20, 20, 30, 0.8);
+      color: #ffffff;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(30, 30, 40, 0.9);
+      border-color: rgba(0, 255, 255, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
+    }
+
+    .loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(10, 10, 11, 0.3);
+      border-radius: 50%;
+      border-top-color: #0a0a0b;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    .success-message {
+      display: none;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      text-align: center;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      animation: slideDown 0.4s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .footer-links {
+      text-align: center;
+      margin-top: 25px;
+      padding-top: 25px;
+      position: relative;
+    }
+
+    .footer-links::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20%;
+      right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+    }
+
+    .footer-links a {
+      color: #00ffff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-links a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    /* 表單驗證樣式 */
+    .form-group.error input,
+    .form-group.error select {
+      border-color: #ef4444;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .form-group.error .error-message {
+      display: block;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .form-group.success input,
+    .form-group.success select {
+      border-color: #10b981;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    }
+
+    /* 響應式設計 */
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 25px;
+        margin: 10px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+
+      .btn {
+        padding: 14px 20px;
+        font-size: 14px;
+      }
+    }
+
+    /* 載入遮罩 */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 10, 11, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(0, 255, 255, 0.3);
+      border-top: 3px solid #00ffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="tech-background"></div>
+  <div class="particles" id="particles"></div>
+  
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="main-container">
+    <div class="container">
+      <div class="header">
+        <h1>會員註冊</h1>
+      </div>
+
+      <div class="success-message" id="successMessage">
+        ✅ 註冊成功！正在發送驗證郵件...
+      </div>
+
+      <form id="registerForm">
+        <!-- 帳號密碼區域 -->
+        <div class="form-group">
+          <label for="email">註冊信箱 *</label>
+          <input type="email" id="email" placeholder="輸入您的 Email 地址" required />
+          <div class="error-message">請輸入有效的 Email 地址</div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">密碼 *</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="至少 8 個字元，包含英數字" required />
+            <button type="button" class="toggle-password" onclick="togglePassword('password')">👁️</button>
+          </div>
+          <div class="password-strength" id="passwordStrength">
+            <div class="password-strength-bar">
+              <div class="password-strength-fill" id="strengthFill"></div>
+            </div>
+            <div class="password-strength-text" id="strengthText">密碼強度：弱</div>
+          </div>
+          <div class="error-message">密碼至少需要 8 個字元</div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">確認密碼 *</label>
+          <div class="password-wrapper">
+            <input type="password" id="confirmPassword" placeholder="再次輸入密碼" required />
+            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</button>
+          </div>
+          <div class="error-message">密碼不一致</div>
+        </div>
+
+        <!-- 基本資料區域 -->
+        <div class="form-group">
+          <label for="name">姓名 *</label>
+          <input type="text" id="name" placeholder="輸入您的姓名" required />
+          <div class="error-message">請輸入姓名</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">電話 *</label>
+            <input type="tel" id="phone" placeholder="09XX-XXX-XXX" required />
+            <div class="error-message">請輸入有效的電話號碼</div>
+          </div>
+          <div class="form-group">
+            <label for="birth_date">生日</label>
+            <input type="date" id="birth_date" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gender">性別</label>
+            <select id="gender">
+              <option value="">選擇性別</option>
+              <option value="男">男性</option>
+              <option value="女">女性</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="address">地址</label>
+            <input type="text" id="address" placeholder="完整地址" />
+          </div>
+        </div>
+
+        <div class="emergency-section">
+          <div class="section-title">緊急聯絡資訊</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emergency_contact">聯絡人姓名</label>
+              <input type="text" id="emergency_contact" placeholder="緊急聯絡人" />
+            </div>
+            <div class="form-group">
+              <label for="emergency_phone">聯絡人電話</label>
+              <input type="tel" id="emergency_phone" placeholder="09XX-XXX-XXX" />
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn btn-primary" onclick="registerUser()">
+            <span class="btn-text">註冊</span>
+            <div class="loading"></div>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="cancelRegister()">
+            取消
+          </button>
+        </div>
+      </form>
+
+      <div class="footer-links">
+        <a href="/login">已有帳號？立即登入</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Firebase 配置和初始化
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        createUserWithEmailAndPassword, 
+        updateProfile, 
+        onAuthStateChanged,
+        signOut,
+        sendEmailVerification,
+        sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // ⚠️ 安全提醒：生產環境中，請將此配置移到環境變數
+    const firebaseConfig = {
+        apiKey: "AIzaSyDgV-g1AfMlVoX2aMcTwTUwiTh-UtFI2WM",
+        authDomain: "project-6479993579264918362.firebaseapp.com",
+        projectId: "project-6479993579264918362",
+        storageBucket: "project-6479993579264918362.firebasestorage.app",
+        messagingSenderId: "722191697784",
+        appId: "1:722191697784:web:ff073399d78518b6d5aa8d",
+        measurementId: "G-Q1VEEC7LTS"
+    };
+
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 全域變數設定
+    window.auth = auth;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.updateProfile = updateProfile;
+    window.sendEmailVerification = sendEmailVerification;
+
+    // 創建粒子效果
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 15;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 6 + 's';
+        particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // 頁面載入完成後執行
+    document.addEventListener('DOMContentLoaded', function() {
+      createParticles();
+      
+      // 監聽認證狀態變化
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          console.log('用戶已登入:', user);
+        } else {
+          console.log('用戶未登入');
+        }
+      });
+    });
+
+    // 切換密碼顯示/隱藏
+    window.togglePassword = function(inputId) {
+      const input = document.getElementById(inputId);
+      const button = input.nextElementSibling;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        button.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        button.textContent = '👁️';
+      }
+    }
+
+    // 檢查密碼強度
+    window.checkPasswordStrength = function(password) {
+      let strength = 0;
+      let strengthText = '';
+      let color = '';
+
+      if (password.length >= 8) strength += 1;
+      if (/[a-z]/.test(password)) strength += 1;
+      if (/[A-Z]/.test(password)) strength += 1;
+      if (/[0-9]/.test(password)) strength += 1;
+      if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+      const strengthFill = document.getElementById('strengthFill');
+      const strengthTextEl = document.getElementById('strengthText');
+
+      switch (strength) {
+        case 0:
+        case 1:
+          strengthText = '密碼強度：很弱';
+          color = '#ef4444';
+          strengthFill.style.width = '20%';
+          break;
+        case 2:
+          strengthText = '密碼強度：弱';
+          color = '#f59e0b';
+          strengthFill.style.width = '40%';
+          break;
+        case 3:
+          strengthText = '密碼強度：中等';
+          color = '#eab308';
+          strengthFill.style.width = '60%';
+          break;
+        case 4:
+          strengthText = '密碼強度：強';
+          color = '#10b981';
+          strengthFill.style.width = '80%';
+          break;
+        case 5:
+          strengthText = '密碼強度：很強';
+          color = '#10b981';
+          strengthFill.style.width = '100%';
+          break;
+      }
+
+      strengthFill.style.background = `linear-gradient(90deg, ${color}, ${color})`;
+      strengthTextEl.textContent = strengthText;
+      strengthTextEl.style.color = color;
+
+      return strength >= 2;
+    }
+
+    // 表單驗證
+    window.validateForm = function() {
+      const email = document.getElementById('email');
+      const password = document.getElementById('password');
+      const confirmPassword = document.getElementById('confirmPassword');
+      const name = document.getElementById('name');
+      const phone = document.getElementById('phone');
+      let isValid = true;
+
+      // 清除之前的錯誤狀態
+      document.querySelectorAll('.form-group').forEach(group => {
+        group.classList.remove('error', 'success');
+      });
+
+      // 驗證Email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email.value.trim() || !emailRegex.test(email.value)) {
+        email.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else {
+        email.closest('.form-group').classList.add('success');
+      }
+
+      // 驗證密碼
+      if (!password.value || password.value.length < 8) {
+        password.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else {
+        password.closest('.form-group').classList.add('success');
+      }
+
+      // 驗證確認密碼
+      if (password.value !== confirmPassword.value) {
+        confirmPassword.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else if (confirmPassword.value) {
+        confirmPassword.closest('.form-group').classList.add('success');
+      }
+
+      // 驗證姓名
+      if (!name.value.trim()) {
+        name.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else {
+        name.closest('.form-group').classList.add('success');
+      }
+
+      // 驗證電話
+      const phoneRegex = /^[\d\-\(\)\+\s]+$/;
+      if (!phone.value.trim() || !phoneRegex.test(phone.value)) {
+        phone.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else {
+        phone.closest('.form-group').classList.add('success');
+      }
+
+      return isValid;
+    }
+
+    // 顯示載入狀態
+    window.showLoading = function(button) {
+      const btnText = button.querySelector('.btn-text');
+      const loading = button.querySelector('.loading');
+      btnText.style.opacity = '0';
+      loading.style.display = 'block';
+      button.disabled = true;
+      
+      // 顯示全頁載入遮罩
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    // 隱藏載入狀態
+    window.hideLoading = function(button) {
+      const btnText = button.querySelector('.btn-text');
+      const loading = button.querySelector('.loading');
+      btnText.style.opacity = '1';
+      loading.style.display = 'none';
+      button.disabled = false;
+      
+      // 隱藏全頁載入遮罩
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // 顯示成功訊息並跳轉
+    window.showSuccessAndRedirect = function(userData) {
+      const successMsg = document.getElementById('successMessage');
+      successMsg.textContent = '✅ 註冊成功！已發送驗證郵件，請檢查您的信箱';
+      successMsg.style.display = 'block';
+      
+      setTimeout(() => {
+        window.location.href = '/'; // 跳轉到登入頁面
+      }, 3000);
+    }
+
+    // Firebase 註冊函數
+    window.registerUser = async function() {
+      if (!validateForm()) {
+        return;
+      }
+
+      const registerButton = document.querySelector('.btn-primary');
+      showLoading(registerButton);
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const name = document.getElementById('name').value;
+
+      const userData = {
+        email: email,
+        password: password,
+        name: name,
+        phone: document.getElementById('phone').value,
+        birth_date: document.getElementById('birth_date').value,
+        gender: document.getElementById('gender').value,
+        address: document.getElementById('address').value,
+        emergency_contact: document.getElementById('emergency_contact').value,
+        emergency_phone: document.getElementById('emergency_phone').value
+      };
+
+      try {
+        // 使用 Firebase 創建用戶
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 更新用戶資料
+        await updateProfile(user, {
+          displayName: name
+        });
+
+        // 發送電子郵件驗證
+        await sendEmailVerification(user);
+
+        console.log('註冊成功:', user);
+        console.log('用戶資料:', userData);
+
+        // 可以在這裡將額外的用戶資料保存到 Firestore
+        // 例如：phone, birth_date, gender, address 等
+
+        showSuccessAndRedirect(userData);
+        
+      } catch (error) {
+        console.error('註冊失敗:', error);
+        let errorMessage = '註冊時發生錯誤，請稍後再試。';
+        
+        // 根據錯誤代碼提供更具體的錯誤訊息
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = '此電子郵件地址已被使用，請使用其他電子郵件。';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = '無效的電子郵件地址格式。';
+            break;
+          case 'auth/operation-not-allowed':
+            errorMessage = '電子郵件/密碼帳戶未啟用。';
+            break;
+          case 'auth/weak-password':
+            errorMessage = '密碼太弱，請選擇更強的密碼。';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = '網絡連接失敗，請檢查您的網絡連接。';
+            break;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        hideLoading(registerButton);
+      }
+    }
+
+    // 取消註冊
+    window.cancelRegister = function() {
+      if (confirm('確定要取消註冊嗎？已填寫的資料將會遺失。')) {
+        window.location.href = '/login';
+      }
+    }
+
+    // 密碼輸入時檢查強度
+    document.getElementById('password').addEventListener('input', function() {
+      const strengthIndicator = document.getElementById('passwordStrength');
+      if (this.value.length > 0) {
+        strengthIndicator.style.display = 'block';
+        checkPasswordStrength(this.value);
+      } else {
+        strengthIndicator.style.display = 'none';
+      }
+    });
+
+    // 即時驗證
+    document.getElementById('email').addEventListener('blur', function() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (this.value.trim() && emailRegex.test(this.value)) {
+        this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
+      }
+    });
+
+    document.getElementById('confirmPassword').addEventListener('blur', function() {
+      const password = document.getElementById('password').value;
+      if (this.value && this.value === password) {
+        this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
+      }
+    });
+
+    document.getElementById('name').addEventListener('blur', function() {
+      if (this.value.trim()) {
+        this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
+      }
+    });
+
+    document.getElementById('phone').addEventListener('blur', function() {
+      const phoneRegex = /^[\d\-\(\)\+\s]+$/;
+      if (this.value.trim() && phoneRegex.test(this.value)) {
+        this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
+      }
+    });
+
+    // 鍵盤快捷鍵支援
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        registerUser();
+      }
+      if (e.key === 'Escape') {
+        cancelRegister();
+      }
+    });

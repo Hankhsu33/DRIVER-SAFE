@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入系統 | TechDrive</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 動態背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 100, 0.05) 0%, transparent 50%);
+            animation: gradient 20s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradient {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            33% { transform: scale(1.1) rotate(120deg); }
+            66% { transform: scale(0.9) rotate(240deg); }
+        }
+
+        /* 網格背景 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            animation: gridMove 30s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .login-container {
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            animation: containerGlow 4s ease-in-out infinite alternate;
+            position: relative;
+        }
+
+        @keyframes containerGlow {
+            0% { 
+                box-shadow: 
+                    0 0 0 1px rgba(255, 255, 255, 0.1),
+                    0 20px 60px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                    0 0 20px rgba(0, 255, 255, 0.1);
+            }
+            100% { 
+                box-shadow: 
+                    0 0 0 1px rgba(255, 255, 255, 0.1),
+                    0 20px 60px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                    0 0 30px rgba(0, 255, 255, 0.2);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-title {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ffff, #ff00ff, #00ff64);
+            background-size: 200% 200%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientText 3s ease infinite;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes gradientText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-input:focus {
+            border-color: #00ffff;
+            box-shadow: 
+                0 0 0 1px #00ffff,
+                0 0 20px rgba(0, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .form-input:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            padding: 8px;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .toggle-password:hover {
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .remember-me input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+            accent-color: #00ffff;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .remember-me:hover label {
+            color: #00ffff;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #00ffff, #0080ff, #ff00ff);
+            background-size: 200% 200%;
+            color: #000000;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+            box-shadow: 
+                0 8px 25px rgba(0, 255, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: buttonGradient 3s ease infinite;
+        }
+
+        @keyframes buttonGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .login-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 35px rgba(0, 255, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(-1px);
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .login-button:hover::before {
+            left: 100%;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-links a {
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            transition: width 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ff00ff;
+            transform: translateY(-1px);
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+
+        .link-separator {
+            color: rgba(255, 255, 255, 0.3);
+            margin: 0 15px;
+        }
+
+        .error-message {
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            display: none;
+            text-align: center;
+            font-weight: 500;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #00ff64, #00cc51);
+            color: #000000;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+            font-weight: 600;
+            animation: slideDown 0.4s ease-out;
+            box-shadow: 0 0 20px rgba(0, 255, 100, 0.3);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 輸入框圖標 */
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            transition: color 0.3s ease;
+            pointer-events: none;
+            font-size: 18px;
+        }
+
+        .form-group.focused .input-icon,
+        .form-group.filled .input-icon {
+            color: #00ffff;
+        }
+
+        .input-with-icon {
+            padding-left: 55px !important;
+        }
+
+        /* 邊框動畫效果 */
+        .tech-border {
+            position: relative;
+        }
+
+        .tech-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(45deg, transparent, #00ffff, transparent, #ff00ff, transparent);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .form-group.focused .tech-border::before {
+            opacity: 1;
+        }
+
+        /* 浮動標籤效果 */
+        .form-group.focused label,
+        .form-group.filled label {
+            color: #00ffff;
+            transform: translateY(-2px);
+        }
+
+        /* 載入動畫 */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #000000;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* 按鈕禁用狀態 */
+        .login-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .login-button:disabled:hover {
+            transform: none !important;
+            box-shadow: 
+                0 8px 25px rgba(0, 255, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 40px 25px;
+                max-width: 380px;
+            }
+            
+            .login-title {
+                font-size: 32px;
+            }
+
+            .form-input {
+                padding: 16px 18px;
+            }
+
+            .input-with-icon {
+                padding-left: 50px !important;
+            }
+        }
+
+        /* 系統狀態指示器 */
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff64;
+            box-shadow: 0 0 15px rgba(0, 255, 100, 0.6);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .system-info {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 300;
+        }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff64;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debugInfo"></div>
+    
+    <div class="login-container">
+        <div class="status-indicator" title="系統在線"></div>
+        
+        <div class="login-header">
+            <h1 class="login-title">系統登入</h1>
+            <p class="login-subtitle">歡迎回到駕駛監控系統</p>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            ⚠️ 帳號或密碼錯誤，請重新輸入
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✅ 驗證成功！正在載入系統...
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username" class="form-label">使用者帳號</label>
+                <div class="tech-border">
+                    <span class="input-icon">👤</span>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input input-with-icon" 
+                        placeholder="請輸入您的帳號或Email"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">系統密碼</label>
+                <div class="password-container tech-border">
+                    <span class="input-icon">🔐</span>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input input-with-icon" 
+                        placeholder="請輸入您的密碼"
+                        required
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <div class="remember-me">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember">保持登入狀態</label>
+            </div>
+
+            <button type="submit" class="login-button">
+                <span class="btn-text">登入</span>
+                <div class="loading"></div>
+            </button>
+        </form>
+
+        <div class="footer-links">
+            <a href="#" onclick="showForgotPassword()">忘記密碼？</a>
+            <span class="link-separator">|</span>
+            <a href="/membership">建立新帳號</a>
+        </div>
+    </div>
+
+    <script type="module">
+        // Debug 輸出函式
+        function debugLog(message) {
+            console.log(`[LOGIN DEBUG] ${message}`);
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = 'block';
+            debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        // 導入 Firebase 模組
+        let auth = null;
+        let signInWithEmailAndPassword = null;
+
+        try {
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js");
+            const { 
+                getAuth, 
+                signInWithEmailAndPassword: signIn, 
+                onAuthStateChanged
+            } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js");
+
+            signInWithEmailAndPassword = signIn;
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyDgV-g1AfMlVoX2aMcTwTUwiTh-UtFI2WM",
+                authDomain: "project-6479993579264918362.firebaseapp.com",
+                projectId: "project-6479993579264918362",
+                storageBucket: "project-6479993579264918362.firebasestorage.app",
+                messagingSenderId: "722191697784",
+                appId: "1:722191697784:web:ff073399d78518b6d5aa8d",
+                measurementId: "G-Q1VEEC7LTS"
+            };
+
+            // 初始化 Firebase
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            
+            debugLog("Firebase 初始化成功");
+
+            // 監聽登入狀態變化
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    debugLog(`用戶已登入: ${user.email}`);
+                } else {
+                    debugLog("用戶未登入");
+                }
+            });
+
+        } catch (error) {
+            debugLog(`Firebase 初始化錯誤: ${error.message}`);
+        }
+
+        // 切換密碼顯示/隱藏
+        window.togglePassword = function() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.toggle-password');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+
+        // 顯示載入狀態
+        function showLoading(button) {
+            const btnText = button.querySelector('.btn-text');
+            const loading = button.querySelector('.loading');
+            btnText.style.opacity = '0';
+            loading.style.display = 'block';
+            button.disabled = true;
+        }
+
+        // 隱藏載入狀態
+        function hideLoading(button) {
+            const btnText = button.querySelector('.btn-text');
+            const loading = button.querySelector('.loading');
+            btnText.style.opacity = '1';
+            loading.style.display = 'none';
+            button.disabled = false;
+        }
+
+        // 輸入框焦點效果
+        function addFocusEffects() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.closest('.form-group').classList.add('focused');
+                });
+
+                input.addEventListener('blur', function() {
+                    this.closest('.form-group').classList.remove('focused');
+                    if (this.value.trim()) {
+                        this.closest('.form-group').classList.add('filled');
+                    } else {
+                        this.closest('.form-group').classList.remove('filled');
+                    }
+                });
+
+                // 初始檢查是否已有值
+                if (input.value.trim()) {
+                    input.closest('.form-group').classList.add('filled');
+                }
+            });
+        }
+
+        // 跳轉到主頁面的函式
+        function redirectToHome() {
+            debugLog("開始跳轉到主頁面");
+            
+            // 嘗試多種跳轉方式
+            try {
+                // 方式1: 使用 window.location.href
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    window.location.href = '/';
+                } else {
+                    window.location.href = '/';
+                }
+                
+                // 備用方式：如果2秒後還沒跳轉，使用 replace
+                setTimeout(() => {
+                    debugLog("使用 location.replace 備用跳轉");
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        window.location.replace('/');
+                    } else {
+                        window.location.replace('/');
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                debugLog(`跳轉錯誤: ${error.message}`);
+                // 最後備用方案
+                alert('登入成功！請手動返回主頁面。');
+            }
+        }
+
+        // 處理登入表單提交
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            debugLog("表單提交開始");
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const loginButton = document.querySelector('.login-button');
+            
+            debugLog(`嘗試登入: ${username}`);
+            
+            // 隱藏之前的訊息
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // 顯示載入狀態
+            showLoading(loginButton);
+
+            // 檢查是否為測試帳號
+            if (username === 'test@example.com' && password === '123456') {
+                debugLog("使用測試帳號登入");
+                
+                // 模擬登入成功
+                const testUserData = {
+                    email: 'test@example.com',
+                    name: '測試用戶',
+                    uid: 'test-uid-123',
+                    loginTime: new Date().toISOString()
+                };
+                
+                try {
+                    localStorage.setItem("user_data", JSON.stringify(testUserData));
+                    debugLog("測試用戶資料已存入 localStorage");
+                    
+                    successMessage.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        hideLoading(loginButton);
+                        redirectToHome();
+                    }, 1500);
+                    
+                } catch (error) {
+                    debugLog(`localStorage 錯誤: ${error.message}`);
+                    hideLoading(loginButton);
+                }
+                return;
+            }
+
+            // Firebase 登入
+            if (!auth || !signInWithEmailAndPassword) {
+                debugLog("Firebase 尚未初始化");
+                errorMessage.textContent = '⚠️ 系統初始化中，請稍後再試';
+                errorMessage.style.display = 'block';
+                hideLoading(loginButton);
+                return;
+            }
+
+            try {
+                debugLog("開始 Firebase 登入");
+                const userCredential = await signInWithEmailAndPassword(auth, username, password);
+                const user = userCredential.user;
+                debugLog(`Firebase 登入成功: ${user.email}`);
+
+                // 把登入資料存到 localStorage
+                const userData = {
+                    email: user.email,
+                    name: user.displayName || "用戶",
+                    uid: user.uid,
+                    loginTime: new Date().toISOString()
+                };
+
+                localStorage.setItem("user_data", JSON.stringify(userData));
+                debugLog("用戶資料已存入 localStorage");
+
+                successMessage.style.display = 'block';
+                
+                // 延遲跳轉，讓用戶看到成功訊息
+                setTimeout(() => {
+                    hideLoading(loginButton);
+                    redirectToHome();
+                }, 1500);
+
+            } catch (error) {
+                debugLog(`Firebase 登入錯誤: ${error.message}`);
+                console.error("Firebase 登入錯誤:", error);
+                
+                let errorMsg = '⚠️ 登入失敗';
+                if (error.code === 'auth/invalid-email') {
+                    errorMsg = '⚠️ 請輸入有效的電子郵件地址';
+                } else if (error.code === 'auth/user-disabled') {
+                    errorMsg = '⚠️ 此帳號已被停用';
+                } else if (error.code === 'auth/user-not-found') {
+                    errorMsg = '⚠️ 找不到此帳號';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMsg = '⚠️ 密碼錯誤';
+                } else if (error.code === 'auth/invalid-credential') {
+                    errorMsg = '⚠️ 帳號或密碼錯誤';
+                }
+                
+                errorMessage.textContent = errorMsg;
+                errorMessage.style.display = 'block';
+                hideLoading(loginButton);
+            }
+        });
+
+        // 忘記密碼功能
+        window.showForgotPassword = function() {
+            alert('🔧 密碼重置服務\n\n請聯繫系統管理員重置密碼：\n📞 電話：02-1234-5678\n📧 Email：admin@techdrive.com\n\n⚡ 24小時技術支援');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog("DOM 載入完成，初始化頁面");
+            addFocusEffects();
+            
+            // 測試帳號提示（僅供演示）
+            setTimeout(() => {
+                if (document.getElementById('username').value === '' && document.getElementById('password').value === '') {
+                    debugLog('測試帳號：test@example.com，密碼：123456');
+                    console.log('🔧 測試帳號：test@example.com，密碼：123456');
+                }
+            }, 3000);
+
+            // 檢查是否已經登入
+            const userData = localStorage.getItem("user_data");
+            if (userData) {
+                debugLog("發現已存在的用戶資料，準備跳轉");
+                try {
+                    const user = JSON.parse(userData);
+                    debugLog(`已登入用戶: ${user.email}`);
+                    // 如果已經登入，直接跳轉
+                    setTimeout(() => {
+                        redirectToHome();
+                    }, 1000);
+                } catch (error) {
+                    debugLog(`解析用戶資料錯誤: ${error.message}`);
+                    localStorage.removeItem("user_data");
+                }
+            }
+        });
+
+        // 鍵盤快捷鍵
+        document.addEventListener('keydown', function(e) {
+            // Enter 鍵快速登入
+            if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // 添加輸入框動畫效果
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // 頁面可見性變化時的處理
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                debugLog("頁面重新可見");
+            }
+        });
+
+        // 頁面載入完成後的額外檢查
+        window.addEventListener('load', function() {
+            debugLog("頁面完全載入完成");
+        });
+
+        // 處理頁面卸載前的清理
+        window.addEventListener('beforeunload', function(e) {
+            debugLog("頁面即將卸載");
+        });
+    </script>
+</body>
+</html>
