@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>駕駛監控系統</title>
+    <style>
+        :root {
+            --primary-color: #14b8a6;
+            --secondary-color: #0891b2;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --success-color: #10b981;
+            --dark-bg: #1a1a1a;
+            --dark-panel: #2a2a2a;
+            --dark-border: #3a3a3a;
+            --dark-text: #e0e0e0;
+            --light-bg: #dbeafe;
+            --light-panel: #ffffff;
+            --light-border: #cbd5e1;
+            --light-text: #1a1a1a;
+            --transition: all 0.3s ease;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --border-radius: 12px;
+            --gap: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: var(--transition);
+            overflow-x: hidden;
+        }
+
+        /* 深色主題 */
+        body.dark-theme {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        /* 淺色主題 */
+        body.light-theme {
+            background-color: var(--light-bg);
+            color: var(--light-text);
+        }
+
+        /* 主要佈局 */
+        .dashboard {
+            display: grid;
+            grid-template-areas:
+                "header header header"
+                "left center right";
+            grid-template-rows: auto 1fr;
+            grid-template-columns: 320px 1fr 400px;
+            height: 100vh;
+            gap: var(--gap);
+            padding: var(--gap);
+        }
+
+        /* 控制按鈕樣式 */
+        .control-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-toggle { color: #facc15; }
+        .chat-toggle { color: var(--primary-color); }
+
+        /* 標題區域 */
+        .dashboard-header {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0px 60px;
+            margin-right: 50px;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .time-display {
+            color: var(--primary-color);
+            font-size: 1.2em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 面板基礎樣式 */
+        .panel {
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        body.dark-theme .panel {
+            background: var(--dark-panel);
+            border: 1px solid var(--dark-border);
+        }
+
+        body.light-theme .panel {
+            background: var(--light-panel);
+            border: 1px solid var(--light-border);
+        }
+
+        /* 左側邊欄 */
+        .left-sidebar {
+            grid-area: left;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap);
+        }
+
+        .driver-profile {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .profile-info h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .profile-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--success-color);
+            transition: var(--transition);
+        }
+
+        body.dark-theme .profile-status {
+            background: rgba(20, 184, 166, 0.1);
+        }
+
+        body.light-theme .profile-status {
+            background: #e0f2f1;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .work-toggle {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .work-toggle button {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .work-toggle button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        /* 指標面板 */
+        .metrics-panel {
+            flex: 1;
+        }
+
+        .metrics-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid;
+        }
+
+        body.dark-theme .metric-item {
+            border-bottom-color: var(--dark-border);
+        }
+
+        body.light-theme .metric-item {
+            border-bottom-color: var(--light-border);
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-value {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .metric-normal { 
+            background: rgba(16, 185, 129, 0.2); 
+            color: var(--success-color); 
+        }
+        .metric-warning { 
+            background: rgba(245, 158, 11, 0.2); 
+            color: var(--warning-color); 
+        }
+        .metric-critical { 
+            background: rgba(239, 68, 68, 0.2); 
+            color: var(--danger-color); 
+        }
+
+        /* 警報區域 */
+        .alert-ticker {
+            height: 200px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .alert-info { 
+            background: rgba(8, 145, 178, 0.2); 
+            color: var(--secondary-color); 
+        }
+        .alert-warning { 
+            background: rgba(245, 158, 11, 0.2); 
+            color: var(--warning-color); 
+        }
+
+        .alert-time {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* 中間內容區域 */
+        .center-content {
+            grid-area: center;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap);
+        }
+
+        .video-feed {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .video-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--danger-color);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .rec-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger-color);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .video-container {
+            flex: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            min-height: 300px;
+            border: 2px solid;
+        }
+
+        body.dark-theme .video-container {
+            background: var(--dark-bg);
+            border-color: var(--dark-border);
+        }
+
+        body.light-theme .video-container {
+            background: #f1f5f9;
+            border-color: var(--light-border);
+        }
+
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 右側邊欄 */
+        .right-sidebar {
+            grid-area: right;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        body.dark-theme .metric-card {
+            background: var(--dark-bg);
+            border: 1px solid var(--dark-border);
+        }
+
+        body.light-theme .metric-card {
+            background: var(--light-panel);
+            border: 1px solid var(--light-border);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .metric-card h5 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-card .unit {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 地圖樣式 */
+        #map {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            border: 2px solid var(--light-border);
+            margin-bottom: 12px;
+        }
+
+        .map-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-controls input {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--light-border);
+            font-size: 14px;
+        }
+
+        .map-controls button {
+            padding: 10px 16px;
+            border-radius: 6px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .map-controls button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        /* 聊天機器人樣式 */
+        .chat-container {
+            display: none;
+            flex-direction: column;
+            max-height: calc(100vh - 120px);
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .chat-header {
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 1px solid;
+        }
+
+        body.dark-theme .chat-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-bottom-color: var(--dark-border);
+        }
+
+        body.light-theme .chat-header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border-bottom-color: var(--light-border);
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden; 
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user { justify-content: flex-end; }
+        .message.bot { justify-content: flex-start; }
+
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            border-bottom-left-radius: 4px;
+        }
+
+        body.dark-theme .message.bot .message-content {
+            background: rgba(55, 65, 81, 0.8);
+            color: #e5e7eb;
+        }
+
+        body.light-theme .message.bot .message-content {
+            background: rgba(255, 255, 255, 0.9);
+            color: #374151;
+            border: 1px solid var(--light-border);
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            border-top: 1px solid;
+        }
+
+        body.dark-theme .chat-input {
+            border-top-color: var(--dark-border);
+        }
+
+        body.light-theme .chat-input {
+            border-top-color: var(--light-border);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--light-border);
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .chat-input input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+
+        .chat-input button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chat-input button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(20, 184, 166, 0.3);
+        }
+
+        /* 歷史紀錄表格 */
+        .historical-logs {
+            border-top: 1px solid;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        body.dark-theme .historical-logs {
+            border-top-color: var(--dark-border);
+        }
+
+        body.light-theme .historical-logs {
+            border-top-color: var(--light-border);
+        }
+
+        .logs-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .log-container {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid;
+        }
+
+        body.dark-theme th,
+        body.dark-theme td {
+            border-bottom-color: var(--dark-border);
+        }
+
+        body.light-theme th,
+        body.light-theme td {
+            border-bottom-color: var(--light-border);
+        }
+
+        th {
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        body.dark-theme th {
+            background: var(--dark-border);
+        }
+
+        body.light-theme th {
+            background: var(--light-border);
+        }
+
+        /* 警報跑馬燈 */
+        .alert-marquee {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            font-weight: 600;
+            z-index: 500;
+            animation: slideUp 0.3s ease-out;
+        }
+        .system-marquee {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            color:#000000e7;
+            background-color: rgb(255, 255, 0);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .system-marquee-content {
+            display: inline-block;
+            animation: marquee-system 16s linear infinite;
+        }
+        @keyframes marquee-system {
+            0% { transform: translateX(800%); }
+            100% { transform: translateX(-100%); }
+        }
+        /* 動態警報跑馬燈 */
+        .recent-alerts {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 10px;
+            transition: background-color 0.3s;
+        }
+        .recent-alerts.has-alerts {
+            background-color: #FFFF00;
+        }
+        .recent-alerts .marquee-content {
+            display: inline-block;
+            animation: marquee-alerts 10s linear infinite;
+        }
+        @keyframes marquee-alerts {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        body.dark-theme .alert-marquee {
+            background: rgba(245, 158, 11, 0.9);
+            color: #1a1a1a;
+        }
+
+        body.light-theme .alert-marquee {
+            background: #fff3cd;
+            color: #92400e;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* 自定義滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* 載入動畫 */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { 
+                transform: scale(0.6);
+                opacity: 0.5;
+            }
+            40% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 280px 1fr 350px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-areas:
+                    "header"
+                    "center"
+                    "left"
+                    "right";
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            
+            .control-buttons {
+                position: relative;
+                top: auto;
+                right: auto;
+                justify-content: center;
+                margin: 10px 0;
+            }
+        }
+
+        @keyframes slideDown {
+            from { 
+                opacity: 0; 
+                transform: translate(-50%, -20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translate(-50%, 0); 
+            }
+        }
+        /* 漢堡選單按鈕 */
+        .hamburger-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            z-index: 1001;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 漢堡線條 */
+        .hamburger-line {
+            width: 24px;
+            height: 3px;
+            background: #4a5568;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* 選單開啟時的動畫 */
+        .hamburger-btn.active .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        /* 側邊選單 */
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            padding: 80px 0 20px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu.active {
+            left: 0;
+        }
+
+        /* 選單標題 */
+        .menu-header {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-header h2 {
+            color: #2d3748;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .menu-header .status {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        /* 選單項目 */
+        .menu-section {
+            padding: 20px 0;
+        }
+
+        .menu-section-title {
+            padding: 0 20px 10px 20px;
+            color: #718096;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding-left: 30px;
+        }
+
+        .menu-item.logout {
+            color: #e53e3e;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        .menu-item.logout:hover {
+            background: rgba(229, 62, 62, 0.1);
+            color: #e53e3e;
+        }
+
+        /* 圖示 */
+        .menu-item::before {
+            content: "";
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.7;
+        }
+
+        .menu-item[data-action="login"]::before {
+            content: "🔑";
+        }
+
+        .menu-item[data-action="register"]::before {
+            content: "✨";
+        }
+
+        .menu-item[data-action="profile"]::before {
+            content: "👤";
+        }
+
+        .menu-item[data-action="logout"]::before {
+            content: "🚪";
+        }
+
+        /* 遮罩層 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 主要內容區域 */
+        .main-content {
+            padding: 100px 20px 20px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-card h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .welcome-card p {
+            color: #718096;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* 通知樣式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1002;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #e53e3e;
+        }
+
+        /* 登入狀態指示器 */
+        .auth-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .auth-indicator.logged-in {
+            background: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2);
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- 控制按鈕 -->
+    <div class="control-buttons">
+        <button class="control-btn theme-toggle" onclick="toggleTheme()" title="切換主題">🌙</button>
+        <button class="control-btn chat-toggle" onclick="toggleRightPanel()" title="聊天機器人">💬</button>
+    </div>
+
+    <div class="dashboard">
+        <!-- 標題區域 -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">駕駛監控系統</h1>
+            <div class="time-display" id="dashboardTime">載入中...</div>
+        </div>
+
+        <!-- 左側邊欄 -->
+        <div class="left-sidebar">
+            <!-- 駕駛資料 -->
+            <div class="panel driver-profile">
+                <div class="profile-header">
+                    <div class="profile-avatar">JD</div>
+                    <div class="profile-info">
+                        <h3 id="userName">駕駛員</h3>
+                        <p>駕照: DL-789456123</p>
+                    </div>
+                </div>
+                <div class="profile-status">
+                    <div class="status-dot"></div>
+                    <span id="work-status">執行勤務中</span>
+                </div>
+                <div class="work-toggle">
+                    <button id="duty-off-button">下班</button>
+                </div>
+            </div>
+
+            <!-- 即時指標 -->
+            <div class="panel metrics-panel">
+                <h4 class="metrics-title">即時偵測數據</h4>
+                <div class="metric-item">
+                    <span class="metric-label">疲勞指數</span>
+                    <span class="metric-value metric-normal" id="fatigueLevel">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">注意力</span>
+                    <span class="metric-value metric-normal" id="attentionLevel">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">眨眼次數</span>
+                    <span class="metric-value metric-normal" id="blink">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">頭部姿勢</span>
+                    <span class="metric-value metric-normal" id="headPose">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">EAR 值</span>
+                    <span class="metric-value metric-normal" id="ear">--</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">打哈欠次數</span>
+                    <span class="metric-value metric-normal" id="yawnCount">--</span>
+                </div>
+            </div>
+
+            <!-- 警報清單 -->
+            <div class="panel alert-ticker" id="alert-ticker">
+                <h4 class="metrics-title">最近警報</h4>
+                <div class="loading">
+                    <span>載入中</span>
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中間內容 -->
+        <div class="center-content">
+            <div class="panel video-feed">
+                <div class="video-header">
+                    <h4 class="video-title">即時攝影畫面</h4>
+                    <div class="recording-indicator">
+                        <div class="rec-dot"></div>
+                        <span>錄製中</span>
+                    </div>
+                </div>
+                <div class="video-container">
+                    <img src="{{ url_for('video_feed') }}" alt="即時影像串流">
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側邊欄 -->
+        <div class="right-sidebar" id="rightPanel">
+            <!-- 預設面板 -->
+            <div id="sidebarContent">
+                <div class="panel">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <h5>今日違規</h5>
+                            <span class="value" id="violation-count">--</span>
+                        </div>
+                        <div class="metric-card">
+                            <h5>安全分數</h5>
+                            <span class="value">--</span><span class="unit">%</span>
+                        </div>
+                        <div class="metric-card">
+                            <h5>行駛時間</h5>
+                            <span class="value" id="route-duration-hours">--</span><span class="unit"></span>
+                        </div>
+                        <div class="metric-card">
+                            <h5>行駛距離</h5>
+                            <span class="value" id="route-distance">--</span><span class="unit"></span>
+                        </div>
+                    </div>
+
+                    <!-- 導航區域 -->
+                    <div>
+                        <h5 style="margin-bottom: 12px; font-weight: 600;">路線導航</h5>
+                        <div id="map"></div>
+                        <div class="map-controls">
+                            <input id="destination-input" type="text" placeholder="輸入目的地地址">
+                            <button onclick="calculateRoute()">開始導航</button>
+                        </div>
+                    </div>
+
+                    <!-- 歷史紀錄 -->
+                    <div class="historical-logs">
+                        <h5 class="logs-title">歷史紀錄</h5>
+                        <div class="log-container">
+                            <table id="eventTable">
+                                <thead>
+                                    <tr>
+                                        <th>時間</th>
+                                        <th>事件</th>
+                                        <th>狀態</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="eventTableBody">
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; opacity: 0.6;">載入中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 聊天機器人面板 -->
+            <div class="panel chat-container" id="chatContainer">
+                <div class="chat-header">
+                    🤖 交通寶 AI 助手
+                </div>
+                <div class="chat-box" id="chatBox">
+                    <div class="message bot">
+                        <div class="message-content">
+                            您好！我是交通寶 AI 助手，可以協助您解答交通相關問題。有什麼可以幫助您的嗎？
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="userInput" placeholder="輸入您的訊息..." onkeypress="handleChatEnter(event)">
+                    <button onclick="sendMessage()" type="button">發送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 警報跑馬燈 -->
+    <div class="system-marquee-content">
+        <div class="system-marquee">
+            ⚠️ 系統正常運行中，持續監控駕駛狀態...
+        </div>
+    </div>
+
+    <!-- 漢堡選單按鈕 -->
+    <button class="hamburger-btn" onclick="toggleMenu()">
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+        <div class="auth-indicator" id="authIndicator"></div>
+    </button>
+
+    <!-- 遮罩層 -->
+    <div class="overlay" onclick="closeMenu()"></div>
+
+    <!-- 側邊選單 -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="menu-header">
+            <h2>會員中心</h2>
+            <div class="status" id="userEmail">尚未登入</div>
+        </div>
+
+        <!-- 未登入時顯示 -->
+        <div class="menu-section" id="authSection">
+            <div class="menu-section-title">帳戶管理</div>
+            <button class="menu-item" data-action="login" onclick="handleMenuAction('login')">
+                登入帳戶
+            </button>
+            <button class="menu-item" data-action="register" onclick="handleMenuAction('register')">
+                註冊新帳戶
+            </button>
+        </div>
+
+        <!-- 已登入時顯示 -->
+        <div class="menu-section" id="userSection" style="display: none;">
+            <div class="menu-section-title">會員功能</div>
+            <button class="menu-item" data-action="profile" onclick="handleMenuAction('profile')">
+                會員資料
+            </button>
+            <button class="menu-item" data-action="orders" onclick="handleMenuAction('orders')">
+                訂單記錄
+            </button>
+            <button class="menu-item" data-action="settings" onclick="handleMenuAction('settings')">
+                帳戶設定
+            </button>
+        </div>
+
+        <!-- 登出按鈕 -->
+        <div class="menu-section" id="logoutSection" style="display: none;">
+            <button class="menu-item logout" data-action="logout" onclick="handleMenuAction('logout')">
+                登出帳戶
+            </button>
+        </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Google Maps API -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADv6rM97_fP3lrVxCDfi6NhPbdG1EMEs0&callback=initMap"></script>
+
+    <!-- 核心 JavaScript 程式碼 - 修復版本 -->
+    <script>
+        // ===== 全域變數宣告 =====
+        let map, directionsService, directionsRenderer;
+        let isWorking = true;
+        let chatHistory = [];
+        let updateIntervals = {};
+        let dashboardApp; // 確保單一實例
+
+        // ===== 主要儀表板應用程式類別 =====
+        class DashboardApp {
+            constructor() {
+                console.log('🚀 初始化 DashboardApp...');
+                this.isInitialized = false;
+                this.init();
+                this.setupEventListeners();
+                this.startUpdateCycles();
+            }
+
+            init() {
+                console.log('⚙️ 初始化基本功能...');
+                this.setThemeByTime();
+                this.updateTime();
+                this.updateData();
+                this.updateAlertTicker();
+                this.isInitialized = true;
+                console.log('✅ DashboardApp 初始化完成');
+            }
+
+            setupEventListeners() {
+                console.log('📡 設定事件監聽器...');
+                
+                // 工作狀態切換 - 使用更安全的選擇器
+                const dutyButton = document.getElementById('duty-off-button');
+                if (dutyButton) {
+                    // 移除舊的監聽器（如果存在）
+                    dutyButton.removeEventListener('click', this.toggleWorkStatusHandler);
+                    // 綁定新的監聽器
+                    this.toggleWorkStatusHandler = (e) => this.toggleWorkStatus(e);
+                    dutyButton.addEventListener('click', this.toggleWorkStatusHandler);
+                }
+
+                // 聊天輸入監聽
+                const chatInput = document.getElementById('userInput');
+                if (chatInput) {
+                    chatInput.removeEventListener('keypress', this.handleChatEnterHandler);
+                    this.handleChatEnterHandler = (e) => this.handleChatEnter(e);
+                    chatInput.addEventListener('keypress', this.handleChatEnterHandler);
+                }
+            }
+
+            startUpdateCycles() {
+                console.log('🔄 啟動更新週期...');
+                
+                // 清除現有的 intervals（防止重複）
+                this.clearUpdateIntervals();
+
+                // 設定各種更新週期
+                updateIntervals.data = setInterval(() => {
+                    if (this.isInitialized) {
+                        this.updateData();
+                    }
+                }, 1000);
+
+                updateIntervals.time = setInterval(() => {
+                    if (this.isInitialized) {
+                        this.updateTime();
+                    }
+                }, 1000);
+
+                updateIntervals.alerts = setInterval(() => {
+                    if (this.isInitialized) {
+                        this.updateAlertTicker();
+                    }
+                }, 3000);
+
+                console.log('✅ 更新週期已啟動');
+            }
+
+            clearUpdateIntervals() {
+                Object.values(updateIntervals).forEach(intervalId => {
+                    if (intervalId) clearInterval(intervalId);
+                });
+                updateIntervals = {};
+            }
+
+            // 根據時間設定主題
+            setThemeByTime() {
+                const hour = new Date().getHours();
+                const isLightTime = hour >= 6 && hour <= 18;
+                
+                document.body.classList.toggle('light-theme', isLightTime);
+                document.body.classList.toggle('dark-theme', !isLightTime);
+                
+                const themeBtn = document.querySelector('.theme-toggle');
+                if (themeBtn) {
+                    themeBtn.textContent = isLightTime ? '☀️' : '🌙';
+                    themeBtn.title = isLightTime ? '切換到深色模式' : '切換到淺色模式';
+                }
+            }
+
+            // 更新時間顯示
+            updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('zh-TW') + ' - ' + 
+                                 now.toLocaleDateString('zh-TW', {
+                                     year: 'numeric',
+                                     month: 'long', 
+                                     day: '2-digit'
+                                 });
+                
+                const timeElement = document.getElementById('dashboardTime');
+                if (timeElement) {
+                    timeElement.textContent = timeString;
+                }
+            }
+
+            // 更新監控數據
+            async updateData() {
+                try {
+                    const response = await fetch('http://localhost:5000/data');
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    this.updateMetrics(data);
+                    this.updateAlertMarquee(data.alerts);
+                } catch (error) {
+                    console.error('數據更新失敗:', error);
+                    this.showConnectionError();
+                }
+            }
+
+            // 更新即時偵測數據
+            updateMetrics(data) {
+                const metrics = {
+                    fatigueLevel: data.fatigue_level?.toFixed(2) || '--',
+                    attentionLevel: data.attention_level?.toFixed(2) || '--',
+                    blink: data.blink_count || '--',
+                    ear: data.ear?.toFixed(3) || '--',
+                    yawnCount: data.yawn_count || '--'
+                };
+
+                // 更新數值
+                Object.entries(metrics).forEach(([key, value]) => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.textContent = value;
+                        this.updateMetricStatus(element, key, value);
+                    }
+                });
+
+                // 更新頭部姿勢
+                this.updateHeadPose(data.head_pose);
+            }
+
+            updateMetricStatus(element, key, value) {
+                // 移除舊的狀態類別
+                element.classList.remove('metric-normal', 'metric-warning', 'metric-critical');
+                
+                // 根據不同指標設定警告閾值
+                let status = 'normal';
+                const numValue = parseFloat(value);
+                
+                switch(key) {
+                    case 'fatigueLevel':
+                        if (numValue > 0.7) status = 'critical';
+                        else if (numValue > 0.5) status = 'warning';
+                        break;
+                    case 'attentionLevel':
+                        if (numValue < 0.3) status = 'critical';
+                        else if (numValue < 0.5) status = 'warning';
+                        break;
+                    case 'ear':
+                        if (numValue < 0.2) status = 'critical';
+                        else if (numValue < 0.25) status = 'warning';
+                        break;
+                }
+                
+                element.classList.add(`metric-${status}`);
+            }
+
+            updateHeadPose(headPose) {
+                const element = document.getElementById('headPose');
+                if (element) {
+                    element.textContent = headPose || '--';
+                    element.classList.remove('metric-warning', 'metric-critical', 'metric-normal');
+                    
+                    if (headPose === 'Forward') {
+                        element.classList.add('metric-normal');
+                    } else if (headPose === 'Left' || headPose === 'Right') {
+                        element.classList.add('metric-warning');
+                    } else if (headPose === 'Down' || headPose === 'Up') {
+                        element.classList.add('metric-critical');
+                    }
+                }
+            }
+
+            // 更新警報跑馬燈
+            updateAlertMarquee(alerts) {
+                const marquee = document.querySelector('.recent-alerts');
+                if (!marquee) return;
+
+                if (alerts && alerts.length > 0) {
+                    const latestAlert = alerts[alerts.length - 1];
+                    const marqueeElement = marquee.querySelector('marquee');
+                    if (marqueeElement) {
+                        marqueeElement.textContent = `⚠️ ${latestAlert.message}`;
+                    }
+                    marquee.style.display = 'block';
+                } else {
+                    marquee.style.display = 'none';
+                }
+            }
+
+            // 更新警報清單
+            async updateAlertTicker() {
+                try {
+                    const response = await fetch('http://localhost:5000/data');
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    this.renderAlertTicker(data);
+                } catch (error) {
+                    console.error('警報更新失敗:', error);
+                }
+            }
+
+            renderAlertTicker(events) {
+                const container = document.getElementById('alert-ticker');
+                if (!container) return;
+
+                container.innerHTML = '<h4 class="metrics-title">最近警報</h4>';
+
+                if (!events || events.length === 0) {
+                    container.innerHTML += '<div style="text-align: center; opacity: 0.6; padding: 20px;">暫無警報</div>';
+                    return;
+                }
+
+                const recentAlerts = events.slice(-5).reverse();
+                recentAlerts.forEach(item => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert-item ${item.status ? 'alert-warning' : 'alert-info'}`;
+                    alertDiv.innerHTML = `
+                        <span>${item.status ? '⚠️' : 'ℹ️'} ${item.event}</span>
+                        <span class="alert-time">${item.timestamp}</span>
+                    `;
+                    container.appendChild(alertDiv);
+                });
+            }
+
+            showConnectionError() {
+                const elements = ['fatigueLevel', 'attentionLevel', 'blink', 'ear', 'yawnCount', 'headPose'];
+                elements.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = '連線錯誤';
+                });
+            }
+
+            // 切換工作狀態
+            async toggleWorkStatus() {
+                console.log('🔄 切換工作狀態...');
+                isWorking = !isWorking;
+
+                if (!isWorking) {
+                    try {
+                        const response = await fetch('/reset_status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({})
+                        });
+
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        
+                        const result = await response.json();
+                        console.log('Reset status:', result);
+
+                        // 更新狀態顯示
+                        const statusElement = document.getElementById('work-status');
+                        const buttonElement = document.getElementById('duty-off-button');
+                        
+                        if (statusElement) statusElement.textContent = '已下班';
+                        if (buttonElement) buttonElement.textContent = '上班';
+
+                        // 重新更新數據
+                        this.updateData(); 
+
+                    } catch (error) {
+                        console.error('下班切換失敗:', error);
+                        alert('切換失敗，請檢查連線');
+                        isWorking = true;
+                    }
+                } else {
+                    // 切換成上班邏輯
+                    const statusElement = document.getElementById('work-status');
+                    const buttonElement = document.getElementById('duty-off-button');
+                    
+                    if (statusElement) statusElement.textContent = '執行勤務中';
+                    if (buttonElement) buttonElement.textContent = '下班';
+
+                }
+            }
+
+            handleChatEnter(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            }
+
+            // 清理資源
+            destroy() {
+                console.log('🧹 清理 DashboardApp 資源...');
+                this.clearUpdateIntervals();
+                this.isInitialized = false;
+            }
+        }
+
+        // ===== 全域函式定義 =====
+        
+        // 主題切換功能
+        function toggleTheme() {
+            const body = document.body;
+            const isLight = body.classList.contains('light-theme');
+            
+            body.classList.toggle('light-theme', !isLight);
+            body.classList.toggle('dark-theme', isLight);
+            
+            const themeBtn = document.querySelector('.theme-toggle');
+            if (themeBtn) {
+                themeBtn.textContent = isLight ? '🌙' : '☀️';
+                themeBtn.title = isLight ? '切換到深色模式' : '切換到淺色模式';
+            }
+        }
+
+        // 右側面板切換功能
+        function toggleRightPanel() {
+            const chatContainer = document.getElementById('chatContainer');
+            const sidebarContent = document.getElementById('sidebarContent');
+            const toggleBtn = document.querySelector('.chat-toggle');
+            
+            if (!chatContainer || !sidebarContent) return;
+
+            const isChatVisible = chatContainer.style.display !== 'none';
+            
+            chatContainer.style.display = isChatVisible ? 'none' : 'flex';
+            sidebarContent.style.display = isChatVisible ? 'block' : 'none';
+            
+            if (toggleBtn) {
+                toggleBtn.textContent = isChatVisible ? '💬' : '📊';
+                toggleBtn.title = isChatVisible ? '開啟聊天' : '返回儀表板';
+            }
+
+            if (!isChatVisible) {
+                setTimeout(() => {
+                    const chatInput = document.getElementById('userInput');
+                    if (chatInput) chatInput.focus();
+                }, 300);
+            }
+        }
+
+        // ===== 聊天功能 =====
+        function addMessageToChat(sender, message) {
+            const chatBox = document.getElementById('chatBox');
+            if (!chatBox) return;
+
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'user' ? 'user' : 'bot');
+            messageElement.innerHTML = `<div class="message-content">${message}</div>`;
+            chatBox.appendChild(messageElement);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            if (!userInput) return;
+
+            const userMessage = userInput.value.trim();
+            if (userMessage === '') return;
+
+            addMessageToChat('user', userMessage);
+            userInput.value = '';
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: userMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.reply) {
+                    addMessageToChat('bot', data.reply);
+                } else if (data.error) {
+                    addMessageToChat('bot', `發生錯誤: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                addMessageToChat('bot', `傳送失敗: ${error}`);
+            });
+        }
+
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // ===== Google Maps 功能 =====
+        function initMap() {
+            console.log('🗺️ 初始化 Google Maps...');
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                draggable: true,
+                panel: null
+            });
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 25.0330, lng: 121.5654 },
+                zoom: 13,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+
+            directionsRenderer.setMap(map);
+            
+            directionsRenderer.addListener("directions_changed", () => {
+                const directions = directionsRenderer.getDirections();
+                const route = directions.routes[0];
+                if (route) {
+                    const leg = route.legs[0];
+                    updateRouteInfo(leg.duration.text, leg.distance.text);
+                }
+            });
+        }
+
+        async function calculateRoute() {
+            const destination = document.getElementById("destination-input").value.trim();
+            
+            if (!destination) {
+                alert("請輸入目的地！");
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                alert("您的瀏覽器不支援定位功能。");
+                return;
+            }
+
+            try {
+                const position = await getCurrentPosition();
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+
+                const request = {
+                    origin: userLocation,
+                    destination: destination,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                    unitSystem: google.maps.UnitSystem.METRIC,
+                    avoidHighways: false,
+                    avoidTolls: false
+                };
+
+                directionsService.route(request, (result, status) => {
+                    if (status === "OK") {
+                        directionsRenderer.setDirections(result);
+                        
+                        const leg = result.routes[0].legs[0];
+                        updateRouteInfo(leg.duration.text, leg.distance.text);
+                        
+                        showNotification(`路線規劃成功！預計 ${leg.duration.text}，距離 ${leg.distance.text}`, 'success');
+                    } else {
+                        console.error("路線規劃失敗:", status);
+                        showNotification("無法規劃路線，請檢查目的地是否正確。", 'error');
+                    }
+                });
+                
+            } catch (error) {
+                console.error("定位失敗:", error);
+                showNotification("無法取得目前位置，請檢查定位權限。", 'error');
+            }
+        }
+
+        function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000
+                });
+            });
+        }
+
+        function updateRouteInfo(duration, distance) {
+            const durationEl = document.getElementById("route-duration-hours");
+            const distanceEl = document.getElementById("route-distance");
+            
+            if (durationEl) durationEl.textContent = duration.replace(/\s*小時/, 'hrs').replace(/\s*分鐘/, 'mins');
+            if (distanceEl) distanceEl.textContent = distance.replace(/\s*公里/, 'km');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 24px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 9999;
+                animation: slideDown 0.3s ease-out;
+            `;
+            
+            switch(type) {
+                case 'success':
+                    notification.style.background = '#10b981';
+                    break;
+                case 'error':
+                    notification.style.background = '#ef4444';
+                    break;
+                default:
+                    notification.style.background = '#3b82f6';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // ===== 漢堡選單功能 =====
+        let isMenuOpen = false;
+        let isLoggedIn = false;
+
+        function toggleMenu() {
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            const sidebarMenu = document.getElementById('sidebarMenu');
+            const overlay = document.querySelector('.overlay');
+            
+            isMenuOpen = !isMenuOpen;
+            
+            if (hamburgerBtn) hamburgerBtn.classList.toggle('active', isMenuOpen);
+            if (sidebarMenu) sidebarMenu.classList.toggle('active', isMenuOpen);
+            if (overlay) overlay.classList.toggle('active', isMenuOpen);
+            
+            document.body.style.overflow = isMenuOpen ? 'hidden' : '';
+        }
+
+        function closeMenu() {
+            if (isMenuOpen) {
+                toggleMenu();
+            }
+        }
+
+        function updateUIState() {
+            const authSection = document.getElementById('authSection');
+            const userSection = document.getElementById('userSection');
+            const logoutSection = document.getElementById('logoutSection');
+            const userEmail = document.getElementById('userEmail');
+            const authIndicator = document.getElementById('authIndicator');
+            const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+            const userName = document.getElementById('userName');
+            
+            if (isLoggedIn && userData && userData.email) {
+                if (authSection) authSection.style.display = 'none';
+                if (userSection) userSection.style.display = 'block';
+                if (logoutSection) logoutSection.style.display = 'block';
+                if (userName) userName.textContent = userData.name || '使用者';
+                if (userEmail) userEmail.textContent = `已登入：${userData.email}`;
+                if (authIndicator) authIndicator.classList.add('logged-in');
+            } else {
+                if (authSection) authSection.style.display = 'block';
+                if (userSection) userSection.style.display = 'none';
+                if (logoutSection) logoutSection.style.display = 'none';
+                if (userEmail) userEmail.textContent = '尚未登入';
+                if (authIndicator) authIndicator.classList.remove('logged-in');
+            }
+        }
+
+        function handleMenuAction(action) {
+            closeMenu();
+            
+            switch (action) {
+                case 'login':
+                    showNotification('開啟登入視窗');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 500);
+                    break;
+                    
+                case 'register':
+                    showNotification('開啟註冊視窗');
+                    setTimeout(() => {
+                        window.location.href = '/membership';
+                    }, 500);
+                    break;
+                    
+                case 'profile':
+                    showNotification('跳轉到會員資料頁面');
+                    break;
+                    
+                case 'orders':
+                    showNotification('查看訂單記錄');
+                    break;
+                    
+                case 'settings':
+                    showNotification('開啟帳戶設定');
+                    break;
+                    
+                case 'logout':
+                    if (confirm('確定要登出嗎？')) {
+                        isLoggedIn = false;
+                        updateUIState();
+                        showNotification('已成功登出');
+                    }
+                    break;
+                    
+                default:
+                    showNotification(`執行 ${action} 功能`, true);
+            }
+        }
+
+        // ===== 應用程式初始化 =====
+        function initializeDashboard() {
+            console.log('🔧 開始初始化儀表板...');
+            
+            // 清理現有實例
+            if (dashboardApp) {
+                dashboardApp.destroy();
+            }
+            
+            // 創建新實例
+            dashboardApp = new DashboardApp();
+            
+            // 初始化 UI 狀態
+            if (window.loginData && window.loginData.isLoggedIn) {
+                isLoggedIn = true;
+            }
+            updateUIState();
+            
+            console.log('✅ 儀表板初始化完成');
+        }
+
+        // ===== 事件監聽器設定 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM 內容已載入，開始初始化...');
+            
+            // 延遲初始化，確保所有資源都已載入
+            setTimeout(() => {
+                initializeDashboard();
+            }, 100);
+
+            // ESC 鍵關閉選單
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isMenuOpen) {
+                    closeMenu();
+                }
+            });
+
+            // 點擊選單外區域關閉選單
+            document.addEventListener('click', function(e) {
+                const hamburgerBtn = document.querySelector('.hamburger-btn');
+                const sidebarMenu = document.getElementById('sidebarMenu');
+                
+                if (isMenuOpen && hamburgerBtn && sidebarMenu && 
+                    !hamburgerBtn.contains(e.target) && !sidebarMenu.contains(e.target)) {
+                    closeMenu();
+                }
+            });
+        });
+
+        // ===== 清理資源 =====
+        window.addEventListener('beforeunload', () => {
+            console.log('🧹 清理應用程式資源...');
+            if (dashboardApp) {
+                dashboardApp.destroy();
+            }
+            Object.values(updateIntervals).forEach(intervalId => {
+                if (intervalId) clearInterval(intervalId);
+            });
+        });
+
+        // ===== 全域錯誤處理 =====
+        window.addEventListener('error', function(e) {
+            console.error('全域錯誤:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('未處理的 Promise 拒絕:', e.reason);
+        });
+    </script>
+
+    <!-- Firebase 認證模組 - 獨立載入 -->
+    <script type="module">
+        // Firebase 認證系統 - 改進版本
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            updateProfile, 
+            onAuthStateChanged,
+            signOut,
+            sendEmailVerification,
+            sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgV-g1AfMlVoX2aMcTwTUwiTh-UtFI2WM",
+            authDomain: "project-6479993579264918362.firebaseapp.com",
+            projectId: "project-6479993579264918362",
+            storageBucket: "project-6479993579264918362.firebasestorage.app",
+            messagingSenderId: "722191697784",
+            appId: "1:722191697784:web:ff073399d78518b6d5aa8d",
+            measurementId: "G-Q1VEEC7LTS"
+        };
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // 全域變數
+        let currentMode = "login";
+        let isProcessing = false;
+
+        // 表單驗證函數
+        function validateForm(email, password, name = "", mode = "login") {
+            const errors = [];
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) {
+                errors.push("請輸入電子郵件");
+            } else if (!emailRegex.test(email)) {
+                errors.push("請輸入有效的電子郵件格式");
+            }
+            
+            if (!password) {
+                errors.push("請輸入密碼");
+            } else if (password.length < 6) {
+                errors.push("密碼至少需要 6 個字元");
+            }
+            
+            if (mode === "register" && !name.trim()) {
+                errors.push("請輸入姓名");
+            }
+            
+            return errors;
+        }
+
+        // UI 控制函數
+        function showLoading(show = true) {
+            const submitBtn = document.getElementById("submitBtn");
+            if (!submitBtn) return;
+            
+            const loadingText = currentMode === "login" ? "登入中..." : "註冊中...";
+            const normalText = currentMode === "login" ? "登入" : "註冊";
+            
+            if (show) {
+                submitBtn.textContent = loadingText;
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.7";
+            } else {
+                submitBtn.textContent = normalText;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+            }
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById("errorMsg");
+            if (errorMsg) {
+                errorMsg.textContent = message;
+                errorMsg.style.display = "block";
+                
+                setTimeout(() => {
+                    errorMsg.style.display = "none";
+                }, 5000);
+            }
+        }
+
+        function clearError() {
+            const errorMsg = document.getElementById("errorMsg");
+            if (errorMsg) {
+                errorMsg.textContent = "";
+                errorMsg.style.display = "none";
+            }
+        }
+
+        // Modal 控制 - 全域函數
+        window.openModal = function(mode) {
+            currentMode = mode;
+            const modal = document.getElementById("authModal");
+            const modalTitle = document.getElementById("modalTitle");
+            const nameField = document.getElementById("nameField");
+            const submitBtn = document.getElementById("submitBtn");
+            
+            if (modal) modal.style.display = "flex";
+            if (modalTitle) modalTitle.textContent = (mode === "login") ? "登入" : "註冊";
+            if (nameField) nameField.style.display = (mode === "register") ? "block" : "none";
+            if (submitBtn) submitBtn.textContent = (mode === "login") ? "登入" : "註冊";
+            
+            // 清空表單和錯誤訊息
+            const emailInput = document.getElementById("emailInput");
+            const passwordInput = document.getElementById("passwordInput");
+            const nameInput = document.getElementById("nameInput");
+            
+            if (emailInput) emailInput.value = "";
+            if (passwordInput) passwordInput.value = "";
+            if (nameInput) nameInput.value = "";
+            clearError();
+        }
+
+        window.closeModal = function() {
+            if (!isProcessing) {
+                const modal = document.getElementById("authModal");
+                if (modal) modal.style.display = "none";
+                clearError();
+            }
+        }
+
+        // 登出函數
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                console.log("用戶已登出");
+            } catch (error) {
+                console.error("登出失敗:", error);
+                alert("登出失敗，請重試");
+            }
+        }
+
+        // 忘記密碼
+        window.resetPassword = async function() {
+            const email = prompt("請輸入您的電子郵件地址：");
+            if (!email) return;
+            
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("密碼重設信已發送到您的信箱，請檢查郵件");
+            } catch (error) {
+                console.error("發送重設密碼信失敗:", error);
+                alert("發送失敗，請確認電子郵件地址是否正確");
+            }
+        }
+
+        // 檢查用戶是否已登入
+        window.checkAuth = function() {
+            return new Promise((resolve) => {
+                const unsubscribe = onAuthStateChanged(auth, (user) => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
+        // 導出認證物件
+        window.firebaseAuth = auth;
+
+        // 監聽認證狀態變化
+        onAuthStateChanged(auth, (user) => {
+            const statusElement = document.getElementById("status");
+            
+            if (user) {
+                const displayName = user.displayName || user.email;
+                if (statusElement) {
+                    statusElement.textContent = `已登入：${displayName}`;
+                }
+                
+                // 更新全域登入狀態
+                window.isLoggedIn = true;
+                isLoggedIn = true;
+                
+                // 更新 UI
+                if (typeof updateUIState === 'function') {
+                    updateUIState();
+                }
+                
+                console.log("用戶已登入:", {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    emailVerified: user.emailVerified
+                });
+            } else {
+                if (statusElement) {
+                    statusElement.textContent = "尚未登入";
+                }
+                
+                // 更新全域登入狀態
+                window.isLoggedIn = false;
+                isLoggedIn = false;
+                
+                // 更新 UI
+                if (typeof updateUIState === 'function') {
+                    updateUIState();
+                }
+                
+                console.log("用戶未登入");
+            }
+        });
+
+        // 主要認證邏輯 - 延遲初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const submitBtn = document.getElementById("submitBtn");
+                
+                if (submitBtn) {
+                    submitBtn.addEventListener("click", async () => {
+                        if (isProcessing) return;
+                        
+                        const emailInput = document.getElementById("emailInput");
+                        const passwordInput = document.getElementById("passwordInput");
+                        const nameInput = document.getElementById("nameInput");
+                        
+                        if (!emailInput || !passwordInput) {
+                            console.warn("認證表單元素未找到");
+                            return;
+                        }
+                        
+                        const email = emailInput.value.trim();
+                        const password = passwordInput.value;
+                        const name = nameInput ? nameInput.value.trim() : "";
+                        
+                        const errors = validateForm(email, password, name, currentMode);
+                        if (errors.length > 0) {
+                            showError(errors.join("、"));
+                            return;
+                        }
+                        
+                        isProcessing = true;
+                        showLoading(true);
+                        clearError();
+                        
+                        try {
+                            if (currentMode === "register") {
+                                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                                const user = userCredential.user;
+                                
+                                if (name) {
+                                    await updateProfile(user, { displayName: name });
+                                }
+                                
+                                try {
+                                    await sendEmailVerification(user);
+                                    console.log("驗證郵件已發送");
+                                } catch (emailError) {
+                                    console.log("發送驗證郵件失敗:", emailError);
+                                }
+                                
+                                alert("註冊成功！歡迎加入我們");
+                                closeModal();
+                                
+                                setTimeout(() => {
+                                    window.location.href = "/membership";
+                                }, 1000);
+                                
+                            } else {
+                                await signInWithEmailAndPassword(auth, email, password);
+                                alert("登入成功！");
+                                closeModal();
+                            }
+                            
+                        } catch (error) {
+                            console.error("認證失敗:", error);
+                            
+                            let errorMessage = "操作失敗，請重試";
+                            switch (error.code) {
+                                case 'auth/email-already-in-use':
+                                    errorMessage = "此電子郵件已被註冊";
+                                    break;
+                                case 'auth/weak-password':
+                                    errorMessage = "密碼強度不足，請選擇更強的密碼";
+                                    break;
+                                case 'auth/user-not-found':
+                                    errorMessage = "找不到此帳戶，請確認電子郵件是否正確";
+                                    break;
+                                case 'auth/wrong-password':
+                                    errorMessage = "密碼錯誤";
+                                    break;
+                                case 'auth/invalid-email':
+                                    errorMessage = "電子郵件格式不正確";
+                                    break;
+                                case 'auth/too-many-requests':
+                                    errorMessage = "嘗試次數過多，請稍後再試";
+                                    break;
+                                default:
+                                    errorMessage = error.message;
+                            }
+                            
+                            showError(errorMessage);
+                        } finally {
+                            isProcessing = false;
+                            showLoading(false);
+                        }
+                    });
+                }
+            }, 500); // 延遲 500ms 確保 DOM 完全準備就緒
+        });
+
+        console.log("🔥 Firebase 認證系統已初始化");
+    </script>
+</body>
+</html>
